@@ -1,0 +1,65 @@
+defender network
+
+🔥 FIREWALL AVANÇADO (iptables)
+
+🧱 1. Reset total
+sudo iptables -F
+sudo iptables -X
+sudo iptables -t nat -F
+sudo iptables -t nat -X
+
+🚫 2. Política padrão (fechado)
+sudo iptables -P INPUT DROP
+sudo iptables -P FORWARD DROP
+sudo iptables -P OUTPUT ACCEPT
+
+🔁 3. Conexões válidas
+sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+🖥️ 4. Loopback
+sudo iptables -A INPUT -i lo -j ACCEPT
+
+🧠 Defender
+🚨 5. Anti-Port Scan (bloqueia scanner tipo nmap)
+
+sudo iptables -A INPUT -p tcp --tcp-flags ALL NONE -j DROP
+sudo iptables -A INPUT -p tcp --tcp-flags ALL ALL -j DROP
+
+👉 Isso pega scans stealth.
+
+🧱 6. Limitar conexões (anti flood / DDoS básico)
+sudo iptables -A INPUT -p tcp --syn -m limit --limit 2/s --limit-burst 5 -j ACCEPT
+
+👉 Evita spam de conexão
+
+🔐 7. Proteção contra brute force (SSH)
+sudo iptables -A INPUT -p tcp --dport 22 -m recent --set
+sudo iptables -A INPUT -p tcp --dport 22 -m recent --update --seconds 60 --hitcount 5 -j DROP
+👉 Se tentar 5 vezes em 1 minuto → bloqueia
+
+Example Pentest:
+
+sudo iptables -P INPUT DROP
+sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 22 -m recent --update --seconds 60 --hitcount 5 -j DROP
+
+⚔️ Attack Simulation
+
+🔍 Network Scan
+nmap -sS -sV -O <target-ip>
+
+💣 Aggressive Scan
+nmap -A -T4 <target-ip>
+
+🔐 Brute Force Attack (SSH)
+hydra -l root -P rockyou.txt ssh://<target-ip>
+
+📊 Monitoring & Logs
+
+Firewall logs can be monitored using:
+
+dmesg | grep ATAQUE
+
+or
+
+tail -f /var/log/syslog
